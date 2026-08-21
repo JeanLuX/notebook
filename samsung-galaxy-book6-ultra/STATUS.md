@@ -68,10 +68,10 @@ Adaptive backlight modulation: unsupported
 
 ## Audio
 
-- Without required Cirrus Logic firmware, audio works only in minimal/fallback mode.
-- Firmware can be extracted from Samsung's official Windows driver and installed on Linux. This significantly improves audio quality, bringing it close to the Windows experience without Dolby processing or other artificial enhancements.
-- Result is sufficient for everyday use and restores built-in speakers' intended character and capability.
-- Extraction procedure: [AUDIO-CIRRUS-FIRMWARE-EXTRACTION.md](./AUDIO-CIRRUS-FIRMWARE-EXTRACTION.md)
+- Fedora 44+ and current Arch Linux packages include the required Cirrus Logic CS35L57 firmware for this laptop (`144dca0a`). Aurora 44 therefore needs no manual extraction or firmware-path configuration.
+- Audio quality should already be good without additional firmware work. The packaged firmware restores the built-in speakers' intended character without Dolby processing or other artificial enhancements.
+- Ubuntu and Debian packages checked on 22 August 2026 did not yet contain the exact `144dca0a` files; other distributions may require the fallback procedure until their packages update.
+- Fallback extraction procedure: [AUDIO-CIRRUS-FIRMWARE-EXTRACTION.md](./AUDIO-CIRRUS-FIRMWARE-EXTRACTION.md)
 - Related issue: https://github.com/antoinecellerier/speaker-tuning-to-easyeffects/issues/27
 
 ## Storage

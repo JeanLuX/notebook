@@ -4,6 +4,24 @@ This procedure extracts the firmware for the six Cirrus Logic CS35L57
 amplifiers from Samsung's official Windows driver, prepares the names expected
 by Linux, and installs it.
 
+> **Fedora 44+ and current Arch Linux — no manual extraction needed (since 11
+> August 2026).** Upstream `linux-firmware` now includes the required files for
+> SSID `144dca0a`. Fedora ships them in [build
+> 3077583](https://koji.fedoraproject.org/koji/buildinfo?buildID=3077583);
+> Arch ships them in the `linux-firmware-cirrus` package.
+>
+> On Fedora 44+ or current Arch Linux, update the normal firmware package and do
+> nothing else: do not extract the Samsung driver, copy files manually, add
+> `firmware_class.path`, or regenerate an initramfs for this firmware. Sound
+> quality should already be good without further action. No Fedora- or
+> Arch-specific installation steps are needed.
+>
+> **This is not yet true for every distribution.** The Ubuntu and Debian package
+> file lists checked on 22 August 2026 do not contain the exact `144dca0a` files;
+> openSUSE and Gentoo were not confirmed. Keep this procedure as a fallback
+> unless the installed package contains
+> `cirrus/cs35l57-b2-dsp1-misc-144dca0a.wmfw` and its six `.bin` files.
+
 ## 1. Scope and Limitations
 
 ### Supported Hardware
@@ -75,8 +93,7 @@ The following commands must be available:
 unzip  install  ln  find  lspci  journalctl
 ```
 
-`dracut`, `restorecon`, and `rpm-ostree` are used only on distributions that
-require them.
+`dracut` is used only on distributions that require it.
 
 ## 3. Check the System
 
@@ -253,44 +270,6 @@ sudo dracut --regenerate-all --force
 **`firmware_class.path` is not required.** Regeneration allows existing initramfs
 images to include the new installation.
 
-### Fedora 44 non-Atomic
-
-On **Fedora Workstation, Fedora Server, or another mutable Fedora 44 edition**:
-
-```bash
-sudo install -d -m 0755 /usr/lib/firmware/cirrus
-sudo cp -a "$OUT"/. /usr/lib/firmware/cirrus/
-sudo restorecon -RF /usr/lib/firmware/cirrus
-sudo dracut --regenerate-all --force
-```
-
-**`firmware_class.path` is not required.** `restorecon` applies the expected
-SELinux contexts.
-
-### Fedora Atomic 44
-
-On **Silverblue, Kinoite, Aurora, and other Fedora Atomic distributions**, `/usr`
-is immutable. **Do not use `rpm-ostree usroverlay` for a persistent
-installation.**
-
-**Store the files under `/etc`, which persists across deployments:**
-
-```bash
-sudo install -d -m 0755 /etc/firmware/cirrus
-sudo cp -a "$OUT"/. /etc/firmware/cirrus/
-sudo restorecon -RF /etc/firmware/cirrus
-```
-
-**Add the custom path to the kernel arguments:**
-
-```bash
-sudo rpm-ostree kargs \
-  --append-if-missing='firmware_class.path=/etc/firmware'
-```
-
-This command prepares a new deployment. It is not necessary to run `dracut`
-directly on Fedora Atomic with this method.
-
 ### Power Off and Restart
 
 **After copying the firmware, fully power off the computer and start it again
@@ -304,23 +283,6 @@ sudo systemctl poweroff
 to start it.
 
 ## 7. Check After a Cold Boot
-
-### Custom Path on Fedora Atomic
-
-This check applies only to Fedora Atomic:
-
-```bash
-cat /sys/module/firmware_class/parameters/path
-```
-
-**Expected result:**
-
-```text
-/etc/firmware
-```
-
-On Ubuntu and non-Atomic Fedora, an empty value is normal because the files are
-installed in the standard path.
 
 ### Firmware Loading
 
@@ -365,13 +327,10 @@ in the kernel documentation.
 1. Replace the ZIP in the working directory.
 2. Repeat sections 4 and 5 to find and prepare the new files.
 3. Copy the new contents to the destination used by the system.
-4. Regenerate the initramfs on Ubuntu or non-Atomic Fedora.
+4. Regenerate the initramfs on Ubuntu.
 5. Fully power off, restart, and check the kernel log.
 
-On Fedora Atomic, the `firmware_class.path` parameter should be added only
-once.
-
-### Disable on Ubuntu or Non-Atomic Fedora
+### Disable on Ubuntu
 
 Move only this machine's files out of the active path:
 
@@ -385,35 +344,12 @@ sudo systemctl poweroff
 
 Wait for the computer to power off completely, then start it manually.
 
-### Disable on Fedora Atomic
-
-Move the files out of the active path:
-
-```bash
-sudo install -d -m 0755 /etc/firmware/cirrus.disabled
-sudo mv /etc/firmware/cirrus/cs35l57-b2-dsp1-misc-144dca0a-* \
-  /etc/firmware/cirrus.disabled/
-```
-
-**Remove the parameter only if `/etc/firmware` contains no other custom
-firmware:**
-
-```bash
-sudo rpm-ostree kargs \
-  --delete-if-present='firmware_class.path=/etc/firmware'
-sudo systemctl poweroff
-```
-
-Wait for the computer to power off completely, then start it manually.
-
 ## 9. Troubleshooting
 
 ### `FIRMWARE_MISSING` Persists
 
 Check the **`cs35l57-b2`** prefix, the **`144dca0a`** SSID, the SoundWire address,
-and the `cirrus` subdirectory. On Fedora Atomic, also check the effective value
-of `/sys/module/firmware_class/parameters/path` and that the files are present
-under `/etc/firmware/cirrus`.
+and the `cirrus` subdirectory.
 
 ### The `.wmfw` Loads but the `.bin` Does Not
 
@@ -438,5 +374,7 @@ audio profile separately. These components are not provided by this procedure.
 - [Linux driver for the CS35L54/56/57/63](https://docs.kernel.org/sound/codecs/cs35l56.html)
 - [Linux firmware search paths](https://docs.kernel.org/driver-api/firmware/fw_search_path.html)
 - [Ubuntu 26.04 LTS notes: transition to Dracut](https://documentation.ubuntu.com/release-notes/26.04/summary-for-lts-users/)
-- [Fedora 44 Dracut package](https://packages.fedoraproject.org/pkgs/dracut/dracut/fedora-44-updates.html)
-- [rpm-ostree administration handbook](https://github.com/coreos/rpm-ostree/blob/main/docs/administrator-handbook.md)
+- [Upstream `linux-firmware` entries for SSID `144dca0a`](https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware/%2B/refs/heads/main/WHENCE#9201)
+- [Arch Linux `linux-firmware-cirrus` file list](https://archlinux.org/packages/core/any/linux-firmware-cirrus/files/)
+- [Ubuntu `linux-firmware` file list](https://packages.ubuntu.com/noble-updates/armhf/linux-firmware/filelist)
+- [Debian sid `firmware-cirrus` file list](https://packages.debian.org/sid/all/firmware-cirrus/filelist)
