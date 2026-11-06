@@ -73,6 +73,8 @@ Adaptive backlight modulation: unsupported
 - Ubuntu and Debian packages checked on 22 August 2026 did not yet contain the exact `144dca0a` files; other distributions may require the fallback procedure until their packages update.
 - Fallback extraction procedure: [AUDIO-CIRRUS-FIRMWARE-EXTRACTION.md](./AUDIO-CIRRUS-FIRMWARE-EXTRACTION.md)
 - Related issue: https://github.com/antoinecellerier/speaker-tuning-to-easyeffects/issues/27
+- Built-in speakers play louder on the left than on the right. A permanent WirePlumber filter-graph correction restores the balance without touching the KDE volume control: [AUDIO-SPEAKER-BALANCE-WIREPLUMBER.md](./AUDIO-SPEAKER-BALANCE-WIREPLUMBER.md)
+- Related issue: https://bugzilla.kernel.org/show_bug.cgi?id=221964
 
 ## Storage
 
